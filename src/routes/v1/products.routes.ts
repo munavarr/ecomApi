@@ -4,7 +4,7 @@ import pool from "../../db/postgre";
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-      cb(null, 'uploads/'); // Destination folder for storing images
+      cb(null, 'uploads/'); // Destination folder 
     },
     filename: function (req, file, cb) {
       cb(null, Date.now() + '-' + file.originalname); // Unique filename
@@ -77,15 +77,7 @@ const productImages:string[] = (request.files as any[])?.map((file: any) => file
 const {pageNumber,pageSize} = request.body
 const offset = (pageNumber - 1) * pageSize;
         try {
-      //     const query2 = `
-      //     SELECT *
-      //     FROM products10
-          // OFFSET $1
-          // LIMIT $2`;
 
-      // const values = [parsedSkip, parsedLimit];
-      // const result2 = await pool.query(query2, values);
-      //...............................................
       const qery = `SELECT
       p.id,
       p.productName,
