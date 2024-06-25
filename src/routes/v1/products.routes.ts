@@ -1,6 +1,9 @@
 import Express, { Request,Response, query } from "express";
 import multer from 'multer'
 import pool from "../../db/postgre";
+import path from 'path'
+import fs from 'fs'
+
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -125,6 +128,206 @@ products.get('/loginwithotptt', async (request, res) => {
 export default products
 
 
+products.post('/deleteSingleProduct', async (request, res) => {
+  const id = request.body.id
+    try {
+      const productQuery = 'SELECT * FROM products10 WHERE id = $1';
+      const product = await pool.query(productQuery, [id]);
+    
+      if (product.rows.length === 0) {
+          throw new Error('Product not found');
+      }
+      const selectQuery = {
+        text: 'SELECT productImages FROM product_images WHERE product_id = $1',
+        values: [id],
+      };
+      const result = await pool.query(selectQuery);
+      const imageNamesToDelete = result.rows.map(row => row.productimages);
+      console.log("imagenames",imageNamesToDelete)
+      imageNamesToDelete.forEach((imageName:string) => {
+        const imagePathToDelete = path.join(__dirname,'..', '..', '..', 'uploads', imageName);
+      console.log("kkkkkkkk",__dirname,imageName)
+        fs.unlink(imagePathToDelete, (err) => {
+            if (err) {
+                console.error(`Error deleting image ${imageName}: ${err}`);
+                return;
+            }
+            console.log(`Image ${imageName} deleted successfully`);
+        });
+      });
+      const deleteimageQuery = {
+        text: 'DELETE FROM product_images WHERE product_id = $1',
+        values: [id],
+      };
+      const deleteImageresult = await pool.query(deleteimageQuery);
+      console.log(`Deleted product images for product_id ${id}`);
+    
+      // const productimagesdeleteresult =  result.rowCount; // Return the number of rows deleted
+      const deleteQuery = 'DELETE FROM products10 WHERE id = $1';
+      console.log(id,"lasttt")
+      const deleteResult = await pool.query(deleteQuery, [id]);
+      console.log(deleteResult)
+      return deleteResult
+    }  catch (error) {
+      console.error('Internal server error', error);
+      res.status(500).send({ Message: 'Internal Server Error' });
+      }
+      })
+
+products.post('/update-product/:id',upload.array('newImageFile',5), async (request, res) => {
+  const id = parseInt(request.params.id);
+  // const newImageFile = request.files;
+  const newImageFile:string[] = (request.files as any[])?.map((file: any) => file.filename);
+  console.log(newImageFile)
+  const { productName, price, count, category, brand } = request.body ;
+const imageId:[] = request.body.imageId.split(',')
+const oldImageName = request.body.oldImageName.split(',')
+// const productname = productName.substring(0, 12);
+        try {
+// const query = `SELECT product_id FROM product_images WHERE id = $1`;
+// const product = await pool.query(query,[imageId])
+// console.log(product.rows[0].product_id)
+//...............................................................
+let updateValues = [];
+let updateFields = [];
+if(!request.body){
+  res.status(401).send({message:'give at least one to update'});
+}else{
+  if (productName) {
+    updateValues.push(productName); 
+    updateFields.push('productName');
+}
+if (price) {
+    updateValues.push(price);
+    updateFields.push('price');
+}
+if (count) {
+    updateValues.push(count);
+    updateFields.push('count');
+}
+if (brand) {
+  updateValues.push(brand);
+  updateFields.push('brand');
+}
+if (category) {
+    updateValues.push(category);
+    updateFields.push('category');
+}
+console.log("bind",updateValues)
+// Construct the update query dynamically based on available fields
+const updateQuery = `
+    UPDATE products10
+    SET ${updateFields.map((field, index) => `${field} = $${index + 1}`).join(', ')}
+    WHERE id = $${updateValues.length + 1}
+`;
+console.log(updateQuery)
+updateValues.push(id);
+console.log(updateValues,"valll")
+const updateResult = await pool.query(updateQuery,updateValues)
+console.log(updateResult)
+}
+//...............................................................
+if(imageId && oldImageName && newImageFile){ 
+  const updateQuery = `
+  UPDATE product_images
+  SET productImages = $1
+  WHERE id = $2
+  RETURNING *;
+`;
+for(let i = 0;i<newImageFile.length;i++){
+  const values = [newImageFile[i], imageId[i]];    
+  await pool.query(updateQuery, values);
+}
+// result.rows[0]; // Return the updated row
+oldImageName.forEach((imageName:string) => {
+  const imagePathToDelete = path.join(__dirname,'..', '..', '..', 'uploads', imageName);
+console.log("kkkkkkkk",__dirname,imageName)
+  fs.unlink(imagePathToDelete, (err) => {
+      if (err) {
+          console.error(`Error deleting image ${imageName}: ${err}`);
+          return;
+      }
+      console.log(`Image ${imageName} deleted successfully`);
+  });
+});
+
+}else{
+  res.status(400).send({ Message: 'something missing' });
+} 
+
+        } catch (error) {
+        console.error('Internal server error', error);
+        res.status(500).send({ Message: 'Internal Server Error' });
+        }
+        });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      //.............................
+      products.post('/otp-login', async (request, res) => {
+        const productId = request.body.id
+        try {
+          // const selectQuery = {
+          //   text: 'SELECT productImages FROM product_images WHERE product_id = $1',
+          //   values: [productId],
+          // };
+    
+   
+          // const result = await pool.query(selectQuery);
+
+          // const productImages = result.rows.map(row => row.productimages);
+    
+          // console.log(`Found ${productImages.length} images for product_id ${productId}`);
+          // console.log("lllllllllllllll",productImages)
+          // return productImages;
+          //.............................................................................................
+          // const deleteQuery = 'SELECT FROM products10 WHERE id = $1';
+          // const deleteResult = await pool.query(deleteQuery, [productId]);
+          // console.log("deeeeeelette",deleteResult)
+          //.........................................................................
+          const imagePathToDelete = path.join(__dirname,'..', '..', '..', 'uploads');
+console.log(imagePathToDelete)
+        } catch (error) {
+        console.error('Internal server error', error);
+        res.status(500).send({ Message: 'Internal Server Error' });
+        }
+        });
+      //.............................
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// const data = [
+//   {name:"bab",roles:["man"]}
+// ]
 
 
 
