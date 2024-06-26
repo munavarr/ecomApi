@@ -68,7 +68,7 @@ const productImages:string[] = (request.files as any[])?.map((file: any) => file
 }
   await pool.query('COMMIT');
   console.log(result.rows[0])
-  return result.rows[0]; 
+  res.status(500).send({result : result.rows[0]  }); 
   }  catch (error) {
     console.error('Internal server error', error);
     res.status(500).send({ Message: 'Internal Server Error' });
@@ -125,7 +125,7 @@ products.get('/loginwithotptt', async (request, res) => {
   }
   });
        
-export default products
+
 
 
 products.post('/deleteSingleProduct', async (request, res) => {
@@ -307,11 +307,19 @@ console.log(imagePathToDelete)
         });
       //.............................
 
+      products.post('/loginwithotp', async (request, res) => {
+       
+        try {
+        
+        } catch (error) {
+        console.error('Internal server error', error);
+        res.status(500).send({ Message: 'Internal Server Error' });
+        }
+        });
 
 
 
-
-
+        export default products
 
 
 

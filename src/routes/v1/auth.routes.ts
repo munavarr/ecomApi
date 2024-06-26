@@ -13,6 +13,8 @@ auth.post('/registerPhone', async (request, res) => {
     try{
       const requestBody:any = request.body as any ;
     const phoneNumber:any = requestBody.phoneNumber as any ;
+    const username:any = requestBody.username as any
+    console.log(username)
     console.log(phoneNumber)
     if(phoneNumber.length !== 12 ){
       res.status(401).send("the number should be 12 digits")
@@ -23,17 +25,17 @@ CREATE TABLE IF NOT EXISTS users10 (
     id SERIAL PRIMARY KEY,
     phoneNumber VARCHAR(12),
     otp INTEGER,
-    username VARCHAR(255) CHECK (LENGTH(username) >= 5 AND LENGTH(username) <= 50)
+    username VARCHAR(12)
 )
 `); 
 
 const existingRecordResult = await pool.query('SELECT * FROM users10 WHERE phoneNumber = $1', [phoneNumber]);
           if (existingRecordResult.rows.length > 0) {
-            const updateCarsQuery = `
-            UPDATE cars
-            SET color = $1
-            WHERE brand = $2;
-          `;
+          //   const updateCarsQuery = `
+          //   UPDATE cars
+          //   SET color = $1
+          //   WHERE brand = $2;
+          // `;
           const generateOtp: string = generateOTP(6);
           const otp: number = parseInt(generateOtp, 10);
           // const sms = sendSMS(phoneNumber,otp)
@@ -47,7 +49,7 @@ const existingRecordResult = await pool.query('SELECT * FROM users10 WHERE phone
         // const sms = sendSMS(phoneNumber,otp)
         // const insertResult = await pool.query('INSERT INTO user10 (phoneNumber, otp) VALUES ($1, $2) RETURNING *;', [phoneNumber, otp]);
         
-const insertResult = await pool.query('INSERT INTO users10 (phoneNumber, otp) VALUES ($1, $2) RETURNING *;', [phoneNumber, otp]);
+const insertResult = await pool.query('INSERT INTO users10 (phoneNumber, otp, username) VALUES ($1, $2, $3) RETURNING *;', [phoneNumber, otp, username]);
 
         res.status(200).send({id:insertResult.rows[0].id,otp:otp});   }     
           }     
