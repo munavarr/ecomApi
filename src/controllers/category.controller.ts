@@ -3,10 +3,10 @@ import { addTheCategory, deleteTheCategory, getAllTheCategories, updateTheCatego
 
 
 export async function addCategory(req: Request, res: Response): Promise<void> {
-    const  { categoryName,description} = req.body
+    const  { categoryName,description,parentId} = req.body
 const categoryimage: string = req.file?.filename as string;
   try {
-    const addCategory = await addTheCategory(categoryName,description,categoryimage);
+    const addCategory = await addTheCategory(categoryName,description,parentId,categoryimage);
     res.status(200).send(addCategory);
   } catch (error) {
     console.error("Error:", error);
@@ -17,7 +17,7 @@ const categoryimage: string = req.file?.filename as string;
 export async function updateCategory(req: Request, res: Response): Promise<void> {
     const id = parseInt(req.params.id);
   // const newImageFile = request.files;
-  const newImageFile: string = req.file as any 
+  const newImageFile: string = req.file?.filename as string 
   const { categoryName,description} = req.body;
   const imageId = req.body.imageId;
   const oldImageName = req.body.oldImageName;
@@ -35,10 +35,10 @@ export async function updateCategory(req: Request, res: Response): Promise<void>
 }
 
 export async function deleteCategory(req: Request, res: Response): Promise<void> {
-    const id = req.body.id;
+    const {id} = req.params;
   try {
-    if (!req.body) {
-      res.status(401).send({ message: "give at least one to update" });
+    if (!id) {
+      res.status(401).send({ message: "id not found" });
     } else {
     const deleteCategory = await deleteTheCategory(id);
     res.status(200).send(deleteCategory);
