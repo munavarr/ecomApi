@@ -2,12 +2,13 @@ import pool from "../db/postgre";
 import { HttpException } from "../exceptions/HttpException";
 import generateOTP from "../utils/otp.utils";
 import Jwt from "jsonwebtoken";
+import sendSMS from "../utils/sms";
 
 export async function register(
   phoneNumber: string,
   username: string
 ): Promise<any> {
-  if (phoneNumber.length !== 12) {
+  if (phoneNumber.length !== 10) {
     throw new HttpException(401, "the number should be 12 digits");
   }
   await pool.query(`
@@ -32,28 +33,30 @@ export async function register(
     // `;
     const generateOtp: string = generateOTP(6);
     const otp: number = parseInt(generateOtp, 10);
-    // const sms = sendSMS(phoneNumber,otp)
+    const sms = await sendSMS(phoneNumber, otp);
     const currentTime: number = new Date().getTime();
     console.log("GETTIME", currentTime);
-    const updateExistingRecordResult = await pool.query(
-      "UPDATE users10 SET otp = $1, currentTime = $2 WHERE phoneNumber = $3 RETURNING *;",
-      [otp, currentTime, phoneNumber]
-    );
+    if (sms) {
+      const updateExistingRecordResult = await pool.query(
+        "UPDATE users10 SET otp = $1, currentTime = $2 WHERE phoneNumber = $3 RETURNING *;",
+        [otp, currentTime, phoneNumber]
+      );
 
-    return { id: updateExistingRecordResult.rows[0].id, otp: otp };
+      return { id: updateExistingRecordResult.rows[0].id, otp: otp };
+    }
   } else {
     const currentTime: number = new Date().getTime();
     const generateOtp: string = generateOTP(6);
     const otp: number = parseInt(generateOtp, 10);
-    // const sms = sendSMS(phoneNumber,otp)
+    const sms = await sendSMS(phoneNumber, otp);
     // const insertResult = await pool.query('INSERT INTO user10 (phoneNumber, otp) VALUES ($1, $2) RETURNING *;', [phoneNumber, otp]);
-
-    const insertResult = await pool.query(
-      "INSERT INTO users10 (phoneNumber, otp, username, role, currentTime) VALUES ($1, $2, $3, $4, $5) RETURNING *;",
-      [phoneNumber, otp, username, "user", currentTime]
-    );
-
-    return { id: insertResult.rows[0].id, otp: otp };
+    if (sms) {
+      const insertResult = await pool.query(
+        "INSERT INTO users10 (phoneNumber, otp, username, role, currentTime) VALUES ($1, $2, $3, $4, $5) RETURNING *;",
+        [phoneNumber, otp, username, "user", currentTime]
+      );
+      return { id: insertResult.rows[0].id, otp: otp };
+    }
   }
 }
 export async function login(id: any, otp: any): Promise<any> {

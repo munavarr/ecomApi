@@ -36,11 +36,12 @@ export async function updateCategory(req: Request, res: Response): Promise<void>
 
 export async function deleteCategory(req: Request, res: Response): Promise<void> {
     const {id} = req.params;
+    const {full} = req.body
   try {
     if (!id) {
       res.status(401).send({ message: "id not found" });
     } else {
-    const deleteCategory = await deleteTheCategory(id);
+    const deleteCategory = await deleteTheCategory(id,full);
     res.status(200).send(deleteCategory);
     }
   } catch (error) {

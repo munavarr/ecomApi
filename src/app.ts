@@ -7,8 +7,14 @@ import bodyParser from 'body-parser';
 // import pgtools from 'pgtools'
 import pg from 'pg'
 import path from 'path'
+import cors from "cors"
 
 const app = express();
+app.use(cors({
+  origin: 'http://localhost:3001', // Allow requests from a specific origin
+  methods: ['GET', 'POST'],      // Allow only specified HTTP methods
+  allowedHeaders: ['Content-Type'], // Allow only specified headers
+}));
 app.use(express.json())
 app.use(bodyParser.json())
 app.use(express.urlencoded({ extended: true }));

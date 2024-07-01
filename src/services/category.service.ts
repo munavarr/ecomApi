@@ -116,20 +116,75 @@ export async function updateTheCategory(
     });
   } 
 }
-export async function deleteTheCategory(id: string): Promise<any> {
+export async function deleteTheCategory(id: string,full:boolean): Promise<any> {
   const categoryQuery = "SELECT * FROM category10 WHERE id = $1";
+  console.log(".......................................................")
+  console.log("id",id)
   const category = await pool.query(categoryQuery, [parseInt(id)]);
-
+  // const all = "SELECT * FROM category10 WHERE id = $1";
+  // const allreatedvcaegories = await poo
   if (category.rows.length === 0) {
     throw new HttpException(404, "Product not found");
   }
-  const selectQuery = {
+    const selectQuery = {
     text: "SELECT categoryImages FROM category_images WHERE category_id = $1",
     values: [parseInt(id)],
   };
   const result = await pool.query(selectQuery);
   const imageNameToDelete = result.rows[0].categoryimages;
   console.log("imagenames", imageNameToDelete);
+  const parentIdToPass = category.rows[0].parentid
+  const getCategoryidByParentId = (await pool.query('SELECT id FROM category10 WHERE parentid = $1',[parseInt(id)])).rows
+  const bb = getCategoryidByParentId.map(ids=>ids.id) 
+  bb.push(parseInt(id))
+  console.log("kkkkkkkkkkkkkkkkkkkkkkk",bb)
+  const rrrr = true
+if(full){
+const results = [];
+for (const id of bb) {
+  try {
+    const y = await pool.query('SELECT categoryImages FROM category_images WHERE category_id = $1', [id]);
+    results.push(y.rows[0].categoryimages);
+  } catch (error) {
+    console.error('Error executing query:', error);
+  }
+}
+console.log("rewsults",results);
+  const imageNamesToDelete = results;
+  console.log("imagenamestodlete", imageNamesToDelete);
+  imageNamesToDelete.forEach((imageName: string) => {
+    const imagePathToDelete = path.join(
+      __dirname,
+      "..",
+      "..",
+      "uploads",
+      imageName
+    );
+    console.log("kkkkkkkk", __dirname, imageName);
+    fs.unlink(imagePathToDelete, (err) => {
+      if (err) {
+        console.error(`Error deleting image ${imageName}: ${err}`);
+        return;
+      }
+      console.log(`Image ${imageName} deleted successfully`);
+    });
+  });
+  for (const id of bb) {
+    try {
+      await pool.query(`DELETE FROM category_images WHERE category_id = $1`,[id])
+      await pool.query(`DELETE FROM category10 WHERE id = $1`,[id])
+    } catch (error) {
+      console.error('Error executing query:', error);
+    }
+  }
+}else{
+ const categoryParentIdupdateQuery = `
+        UPDATE category10
+        SET parentid = $1
+        WHERE parentid = $2
+        RETURNING *;
+      `;
+await pool.query(categoryParentIdupdateQuery,[parentIdToPass,parseInt(id)])
   const imagePathToDelete = path.join(
     __dirname,
     "..",
@@ -160,6 +215,48 @@ export async function deleteTheCategory(id: string): Promise<any> {
   console.log(deleteResult.rows);
   return deleteResult.rows;
 }
+
+}
+
+
+// }
+
+  // const imageNamesToDelete = result.map((id) => id.productimages);
+//   console.log("imagenames", imageNamesToDelete);
+//   imageNamesToDelete.forEach((imageName: string) => {
+//     const imagePathToDelete = path.join(
+//       __dirname,
+//       "..",
+//       "..",
+//       "..",
+//       "uploads",
+//       imageName
+//     );
+//     console.log("kkkkkkkk", __dirname, imageName);
+//     fs.unlink(imagePathToDelete, (err) => {
+//       if (err) {
+//         console.error(`Error deleting image ${imageName}: ${err}`);
+//         return;
+//       }
+//       console.log(`Image ${imageName} deleted successfully`);
+//     });
+//   });
+// }
+ 
+ 
+//  const categoryParentIdupdateQuery = `
+//         UPDATE category10
+//         SET parentid = $1
+//         WHERE id = $2
+//         RETURNING *;
+//       `;
+//   await getCategoryToPassParentId.forEach(element => {
+//     pool.query(categoryParentIdupdateQuery,[parentIdToPass,element]);
+//    });
+     
+
+
+
 export async function getAllTheCategories(
   pageNumber: number,
   pageSize: number
