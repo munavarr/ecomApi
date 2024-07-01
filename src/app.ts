@@ -8,7 +8,7 @@ import bodyParser from 'body-parser';
 import pg from 'pg'
 import path from 'path'
 import cors from "cors"
-
+const ff = "f"
 const app = express();
 app.use(cors({
   origin: 'http://localhost:3001', // Allow requests from a specific origin
