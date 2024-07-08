@@ -4,6 +4,7 @@ import { addTheCategory, deleteTheCategory, getAllTheCategories, updateTheCatego
 
 export async function addCategory(req: Request, res: Response): Promise<void> {
     const  { categoryName,description,parentId} = req.body
+    // const
 const categoryimage: string = req.file?.filename as string;
   try {
     const addCategory = await addTheCategory(categoryName,description,parentId,categoryimage);
@@ -38,8 +39,8 @@ export async function deleteCategory(req: Request, res: Response): Promise<void>
     const {id} = req.params;
     const {full} = req.body
   try {
-    if (!id) {
-      res.status(401).send({ message: "id not found" });
+    if (!id||!full) {
+      res.status(401).send({ message: "id or full not found" });
     } else {
     const deleteCategory = await deleteTheCategory(id,full);
     res.status(200).send(deleteCategory);

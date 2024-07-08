@@ -16,3 +16,7 @@ export async function select(obj:dbOpeationSelect){
     const result = obj.filterValue ?  await pool.query(query,[obj.filterValue]): await pool.query(query)
     return result.rows
 }
+
+export function jj(){
+return [1,2,4]
+}

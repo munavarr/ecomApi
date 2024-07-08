@@ -16,7 +16,7 @@ const storage = multer.diskStorage({
   });
 const upload = multer({ storage: storage })
 
-categories.post('/add-category',upload.single('categoryimage'), addCategory);
+categories.post('/add-category',upload.single('categoryimage'),addCategory);
 categories.put('/update-category/:id',upload.single('newimagefile'),updateCategory);
 categories.get('/get-all-category',getAllCategories);
 categories.delete('/delete-category/:id',authorizeRole([ROLE.ADMIN]),deleteCategory);

@@ -1,3 +1,4 @@
+import { DataStructure } from "../interfaces/product";
 import {
   addTheProduct,
   deleteTheProduct,
@@ -5,19 +6,37 @@ import {
   updateTheProduct,
 } from "../services/products.service";
 import { Request, Response } from "express";
+
 export async function addProduct(req: Request, res: Response): Promise<void> {
   try {
-    const { productName, price, count, category, brand } = req.body;
+    const variantImages: any[] = req.files as any[];
     const productImages: string[] = (req.files as any[])?.map(
       (file: any) => file.filename
     );
+    const productDetails = req.body.productDetails;
+    const initials = req.body.initialProducts;
+    const addOnsAndVariants: DataStructure = JSON.parse(productDetails);
+    const initialProducts = JSON.parse(initials);
+    const { productName, price, count, category, brand } = initialProducts;
+
+    variantImages?.map((image) => {
+      let idFromFilename = parseInt(image.originalname.split(".")[1]); // Extracts '0' or '1'
+      addOnsAndVariants.variants?.map((variant: { values: any[] }) => {
+        variant.values?.map((value) => {
+          if (value.id === idFromFilename) {
+            value.image = image.filename;
+          }
+        });
+      });
+    });
     const addProduct = await addTheProduct(
       productName,
       price,
       count,
       category,
       brand,
-      productImages
+      productImages,
+      addOnsAndVariants
     );
     res.status(200).send(addProduct);
   } catch (error) {

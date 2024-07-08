@@ -8,10 +8,11 @@ import bodyParser from 'body-parser';
 import pg from 'pg'
 import path from 'path'
 import cors from "cors"
-const ff = "f"
+import { jj } from './db/dbOperation';
+
 const app = express();
 app.use(cors({
-  origin: 'http://localhost:3001', // Allow requests from a specific origin
+  origin: 'http://localhost:5173', // Allow requests from a specific origin
   methods: ['GET', 'POST'],      // Allow only specified HTTP methods
   allowedHeaders: ['Content-Type'], // Allow only specified headers
 }));
@@ -23,7 +24,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/', AppRoutes);
 
 const PORT = process.env.PORT || 3000;
-
 const uploadsDirectory = path.join(__dirname, '..', 'uploads');
 console.log(__dirname,uploadsDirectory)
 app.use(express.static(uploadsDirectory));
@@ -39,5 +39,7 @@ const start = async () => {
   }
 };
 start();
+
+
 
 

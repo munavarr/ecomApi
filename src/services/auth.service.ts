@@ -2,7 +2,7 @@ import pool from "../db/postgre";
 import { HttpException } from "../exceptions/HttpException";
 import generateOTP from "../utils/otp.utils";
 import Jwt from "jsonwebtoken";
-import sendSMS from "../utils/sms";
+// import sendSMS from "../utils/sms";
 
 export async function register(
   phoneNumber: string,
@@ -33,7 +33,8 @@ export async function register(
     // `;
     const generateOtp: string = generateOTP(6);
     const otp: number = parseInt(generateOtp, 10);
-    const sms = await sendSMS(phoneNumber, otp);
+    // const sms = await sendSMS(phoneNumber, otp);
+    const sms = true
     const currentTime: number = new Date().getTime();
     console.log("GETTIME", currentTime);
     if (sms) {
@@ -48,7 +49,8 @@ export async function register(
     const currentTime: number = new Date().getTime();
     const generateOtp: string = generateOTP(6);
     const otp: number = parseInt(generateOtp, 10);
-    const sms = await sendSMS(phoneNumber, otp);
+    // const sms = await sendSMS(phoneNumber, otp);
+    const sms = true
     // const insertResult = await pool.query('INSERT INTO user10 (phoneNumber, otp) VALUES ($1, $2) RETURNING *;', [phoneNumber, otp]);
     if (sms) {
       const insertResult = await pool.query(

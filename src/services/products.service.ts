@@ -9,16 +9,19 @@ export async function addTheProduct(
   count: string,
   category: string,
   brand: string,
-  productImages: string[]
+  productImages: string[],
+  ss: any
 ): Promise<any> {
   await pool.query(`
         CREATE TABLE IF NOT EXISTS products10 (
         id SERIAL PRIMARY KEY,
         productName VARCHAR(12),
-        price VARCHAR(12),
-        count VARCHAR(12),
+        price INT,
+        count INT,
         category VARCHAR(12),
-        brand VARCHAR(12)
+        brand VARCHAR(12),
+        productaddon JSONB[],
+        productvariants JSONB[]
         )
         `);
   await pool.query(`
@@ -28,6 +31,19 @@ export async function addTheProduct(
           productImages TEXT
       )
           `);
+  //   await pool.query(`
+  //     CREATE TABLE IF NOT EXISTS productconfiguration (
+  //      id SERIAL PRIMARY KEY,
+  //      product_id INTEGER REFERENCES products10(id),
+  //      productImages TEXT
+  //  )
+  //      `);
+  //      await pool.query(`CREATE TABLE IF NOT EXISTS productconfiguration_images (
+  //      id SERIAL PRIMARY KEY,
+  //      productconfiguration_id INTEGER REFERENCES productconfiguration(id),
+  //      p
+  //      productImages TEXT
+  //  )`)
   const existingProductQuery =
     "SELECT * FROM products10 WHERE productName = $1";
   const existingProductResult = await pool.query(existingProductQuery, [
@@ -39,20 +55,26 @@ export async function addTheProduct(
   } else {
     const priceNum = parseFloat(price);
     const countNum = parseInt(count, 10);
-
     const insertQuery = `
-          INSERT INTO products10 (productName, price, count, category, brand)
-          VALUES ($1, $2, $3, $4, $5)
+          INSERT INTO products10 (productName, price, count, category, brand, productaddon, productvariants)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
           RETURNING *`;
-
-    const values = [productName, priceNum, countNum, category, brand];
+    const values = [
+      productName,
+      priceNum,
+      countNum,
+      category,
+      brand,
+      // {ll:[{...ss.productinfo}]},{ll:[{...ss.variants}]}
+      ss.productinfo,
+      ss.variants,
+    ];
     const result = await pool.query(insertQuery, values);
     const productId = result.rows[0].id;
-
     const insertImageQuery = `
   INSERT INTO product_images (product_id, productImages)
   VALUES ($1, $2)`;
-
+  
     for (let i = 0; i < productImages.length; i++) {
       await pool.query(insertImageQuery, [productId, productImages[i]]);
     }

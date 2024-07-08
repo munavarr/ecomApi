@@ -118,40 +118,26 @@ export async function updateTheCategory(
 }
 export async function deleteTheCategory(id: string,full:boolean): Promise<any> {
   const categoryQuery = "SELECT * FROM category10 WHERE id = $1";
-  console.log(".......................................................")
-  console.log("id",id)
   const category = await pool.query(categoryQuery, [parseInt(id)]);
-  // const all = "SELECT * FROM category10 WHERE id = $1";
-  // const allreatedvcaegories = await poo
+
   if (category.rows.length === 0) {
-    throw new HttpException(404, "Product not found");
+    throw new HttpException(404, "cateogory not found");
   }
-    const selectQuery = {
-    text: "SELECT categoryImages FROM category_images WHERE category_id = $1",
-    values: [parseInt(id)],
-  };
-  const result = await pool.query(selectQuery);
-  const imageNameToDelete = result.rows[0].categoryimages;
-  console.log("imagenames", imageNameToDelete);
-  const parentIdToPass = category.rows[0].parentid
-  const getCategoryidByParentId = (await pool.query('SELECT id FROM category10 WHERE parentid = $1',[parseInt(id)])).rows
-  const bb = getCategoryidByParentId.map(ids=>ids.id) 
-  bb.push(parseInt(id))
-  console.log("kkkkkkkkkkkkkkkkkkkkkkk",bb)
-  const rrrr = true
+
 if(full){
-const results = [];
-for (const id of bb) {
+  const idsOfParentIdDependsQuery = (await pool.query('SELECT id FROM category10 WHERE parentid = $1',[parseInt(id)])).rows
+  const idsOfParentIdDepends:any = idsOfParentIdDependsQuery.map(ids=>ids.id) 
+  idsOfParentIdDepends.push(parseInt(id))
+const categoryImagesResults = [];
+for (const id of idsOfParentIdDepends) {
   try {
-    const y = await pool.query('SELECT categoryImages FROM category_images WHERE category_id = $1', [id]);
-    results.push(y.rows[0].categoryimages);
+    const getCategoryImagesQuery = await pool.query('SELECT categoryImages FROM category_images WHERE category_id = $1', [id]);
+    categoryImagesResults.push(getCategoryImagesQuery.rows[0].categoryimages);
   } catch (error) {
     console.error('Error executing query:', error);
   }
 }
-console.log("rewsults",results);
-  const imageNamesToDelete = results;
-  console.log("imagenamestodlete", imageNamesToDelete);
+  const imageNamesToDelete = categoryImagesResults;
   imageNamesToDelete.forEach((imageName: string) => {
     const imagePathToDelete = path.join(
       __dirname,
@@ -160,7 +146,6 @@ console.log("rewsults",results);
       "uploads",
       imageName
     );
-    console.log("kkkkkkkk", __dirname, imageName);
     fs.unlink(imagePathToDelete, (err) => {
       if (err) {
         console.error(`Error deleting image ${imageName}: ${err}`);
@@ -169,7 +154,7 @@ console.log("rewsults",results);
       console.log(`Image ${imageName} deleted successfully`);
     });
   });
-  for (const id of bb) {
+  for (const id of idsOfParentIdDepends) {
     try {
       await pool.query(`DELETE FROM category_images WHERE category_id = $1`,[id])
       await pool.query(`DELETE FROM category10 WHERE id = $1`,[id])
@@ -178,6 +163,13 @@ console.log("rewsults",results);
     }
   }
 }else{
+  const parentIdToPass = category.rows[0].parentid
+  const categoryimageQuery = {
+    text: "SELECT categoryImages FROM category_images WHERE category_id = $1",
+    values: [parseInt(id)],
+  };
+  const categoryimage = await pool.query(categoryimageQuery);
+  const imageNameToDelete = categoryimage.rows[0].categoryimages;
  const categoryParentIdupdateQuery = `
         UPDATE category10
         SET parentid = $1
@@ -192,7 +184,6 @@ await pool.query(categoryParentIdupdateQuery,[parentIdToPass,parseInt(id)])
     "uploads",
     imageNameToDelete
   );
-  console.log("kkkkkkkk", __dirname, imageNameToDelete);
   fs.unlink(imagePathToDelete, (err) => {
     if (err) {
       console.error(`Error deleting image ${imageNameToDelete}: ${err}`);
@@ -200,24 +191,17 @@ await pool.query(categoryParentIdupdateQuery,[parentIdToPass,parseInt(id)])
     }
     console.log(`Image ${imageNameToDelete} deleted successfully`);
   });
-
   const deleteimageQuery = {
     text: "DELETE FROM category_images WHERE category_id = $1",
     values: [parseInt(id)],
   };
   const deleteImageresult = await pool.query(deleteimageQuery);
-  console.log(`Deleted product images for category_id ${id}`);
-
   // const productimagesdeleteresult =  result.rowCount; // Return the number of rows deleted
   const deleteQuery = "DELETE FROM category10 WHERE id = $1";
-  console.log(id, "lasttt");
   const deleteResult = await pool.query(deleteQuery, [parseInt(id)]);
-  console.log(deleteResult.rows);
-  return deleteResult.rows;
+  return {deleteCategory:deleteResult.rows,deleteimagecategory:deleteImageresult};
 }
-
 }
-
 
 // }
 
